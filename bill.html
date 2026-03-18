@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Names Manager</title>
+  <style>
+    body {
+      font-family: Arial;
+      max-width: 400px;
+      margin: 40px auto;
+      text-align: center;
+    }
+    input, button {
+      padding: 10px;
+      margin: 5px;
+      width: 80%;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #f2f2f2;
+      margin: 5px;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Names List</h2>
+
+<ul id="list"></ul>
+
+<input type="text" id="name" placeholder="Enter name">
+<br>
+<button onclick="addName()">Add Name</button>
+
+<script>
+const sheetURL = "https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec";
+
+// Load names
+async function loadNames() {
+  try {
+    const res = await fetch(sheetURL);
+    const data = await res.json();
+
+    const list = document.getElementById("list");
+    list.innerHTML = "";
+
+    data.forEach(row => {
+      if (row[0]) {
+        const li = document.createElement("li");
+        li.textContent = row[0];
+        list.appendChild(li);
+      }
+    });
+  } catch (err) {
+    alert("Error loading data");
+    console.error(err);
+  }
+}
+
+// Add name
+async function addName() {
+  const input = document.getElementById("name");
+  const name = input.value.trim();
+
+  if (!name) {
+    alert("Enter a name");
+    return;
+  }
+
+  try {
+    await fetch(sheetURL, {
+      method: "POST",
+  	headers: {
+    		"Content-Type": "application/x-www-form-urlencoded"
+ 	},
+  	body: "name=" + encodeURIComponent(name)
+    })
+
+    input.value = "";
+    loadNames();
+  } catch (err) {
+    alert("Error saving data");
+    console.error(err);
+  }
+}
+
+// Load on start
+loadNames();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Prasanna Data View Sheet</title>
+  <style>
+    body.loading {
+      filter: (1px);
+      pointer-events: none;
+    }
+    #loader {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      font-weight: bold;
+      background: rgba(255,255,255,0.9);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      display: none;
+    }
+    table {
+      border-collapse: collapse;
+      width: 70%;
+      margin: 20px auto;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .filters {
+      text-align: center;
+      margin: 20px;
+    }
+    .filters select {
+      margin: 0 10px;
+      padding: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div id="loader">Loading data...</div>
+
+  <h2 style="text-align:center;">Prasanna Data view sheet</h2>
+  
+  <!-- Filter dropdowns -->
+  <div class="filters">
+    <strong>Names</strong>
+    <select id="nameFilter">
+      <option value="">All</option>
+    </select> 
+    <strong>Months</strong>
+    <select id="monthFilter">
+      <option value="">All</option>
+    </select>
+    <button onclick="applyFilters()">Apply Filters</button>
+    <button onclick="resetFilters()">Reset</button>
+  </div>
+
+  <table id="dataTable"></table>
+
+  <script>
+    const url = "https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec";
+    let allData = [];
+
+    // Show loader
+    function showLoader() {
+      document.body.classList.add("loading");
+      document.getElementById("loader").style.display = "block";
+    }
+
+    // Hide loader
+    function hideLoader() {
+      document.body.classList.remove("loading");
+      document.getElementById("loader").style.display = "none";
+    }
+
+    // Function to render table with explicit columns
+    function renderTable(data) {
+      const table = document.getElementById("dataTable");
+      table.innerHTML = ""; // Clear previous content
+
+      // Create header row
+      const headerRow = document.createElement("tr");
+      ["S.No", "Name", "Month"].forEach(col => {
+        const th = document.createElement("th");
+        th.textContent = col;
+        headerRow.appendChild(th);
+      });
+      table.appendChild(headerRow);
+
+      // Create data rows
+      data.forEach((row, index) => {
+        const tr = document.createElement("tr");
+
+        // S.No
+        const tdSno = document.createElement("td");
+        tdSno.textContent = index + 1;
+        tr.appendChild(tdSno);
+
+        // Name
+        const tdName = document.createElement("td");
+        tdName.textContent = row[1] || "";
+        tr.appendChild(tdName);
+
+        // Month
+        const tdMonth = document.createElement("td");
+        tdMonth.textContent = row[2] || "";
+        tr.appendChild(tdMonth);
+
+        table.appendChild(tr);
+      });
+    }
+
+    // Populate dropdowns
+    function populateDropdowns(data) {
+      const nameSet = new Set();
+      const monthSet = new Set();
+
+      data.forEach(row => {
+        if (row[1]) nameSet.add(row[1]);
+        if (row[2]) monthSet.add(row[2]);
+      });
+
+      const nameFilter = document.getElementById("nameFilter");
+      nameSet.forEach(name => {
+        const option = document.createElement("option");
+        option.value = name.toLowerCase();
+        option.textContent = name;
+        nameFilter.appendChild(option);
+      });
+
+      const monthFilter = document.getElementById("monthFilter");
+      monthSet.forEach(month => {
+        const option = document.createElement("option");
+        option.value = month.toLowerCase();
+        option.textContent = month;
+        monthFilter.appendChild(option);
+      });
+    }
+
+    // Fetch data with loader
+    showLoader();
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        allData = data.slice(1); // Skip header row
+        renderTable(allData);
+        populateDropdowns(allData);
+        hideLoader();
+      })
+      .catch(error => {
+        console.error("Error fetching data:", error);
+        hideLoader();
+      });
+
+    // Apply filters
+    function applyFilters() {
+      const nameValue = document.getElementById("nameFilter").value;
+      const monthValue = document.getElementById("monthFilter").value;
+
+      const filteredRows = allData.filter(row => {
+        const nameMatch = !nameValue || (row[1] && row[1].toLowerCase() === nameValue);
+        const monthMatch = !monthValue || (row[2] && row[2].toLowerCase() === monthValue);
+        return nameMatch && monthMatch;
+      });
+
+      renderTable(filteredRows);
+    }
+
+    // Reset filters
+    function resetFilters() {
+      document.getElementById("nameFilter").value = "";
+      document.getElementById("monthFilter").value = "";
+      renderTable(allData);
+    }
+  </script>
+</body>
+</html>

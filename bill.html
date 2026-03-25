@@ -88,8 +88,44 @@
        })
        .then(response => response.text())
        .then(result => {
-          document.getElementById("status").textContent = "Data inserted successfully!";
-          document.getElementById("dataForm").reset();
+const data = JSON.parse(result);
+          let output = `
+    ✅ Data Inserted Successfully! <br><br>
+    <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; margin:auto;">
+    <tr>
+      <th align='left'>Bill Id</th>
+      <td align='left'>${data.data[0]}</td>
+    </tr>
+    <tr>
+      <th align='left'>Customer Id</th>
+      <td align='left'>${data.data[1]}</td>
+    </tr>
+    <tr>
+      <th align='left'>Name</th>
+      <td align='left'>${data.data[2]}</td>
+    </tr>
+    <tr>
+      <th align='left'>Month</th>
+      <td align='left'>${data.data[3]}</td>
+    </tr>
+    <tr>
+      <th align='left'>Amount</th>
+      <td align='left'>${data.data[4]}</td>
+    </tr>
+    <tr>
+      <th align='left'>Issued Date</th>
+      <td align='left'>${data.data[5]}</td>
+    </tr>
+    <tr>
+      <th align='left'>Issued By</th>
+      <td align='left'>${data.data[6]}</td>
+    </tr>
+  </table>
+  <button onclick="printData()">🖨️ Print</button>
+  `;
+
+  document.getElementById("status").innerHTML = output;
+  //document.getElementById("dataForm").reset();
        })
     .catch(error => {
        document.getElementById("status").textContent = "Error inserting data.";

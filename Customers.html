@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Customer Lookup</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      padding: 30px 16px;
+      color: #e0e0e0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      color: #e94560;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    header p {
+      color: #a0aec0;
+      margin-top: 6px;
+      font-size: 0.95rem;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .search-box select {
+      flex: 1;
+      padding: 14px 18px;
+      border: 2px solid #0f3460;
+      border-radius: 10px;
+      font-size: 1rem;
+      background: #16213e;
+      color: #e0e0e0;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23607090' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      padding-right: 40px;
+      transition: border-color 0.25s;
+    }
+
+    .search-box select:focus  { border-color: #e94560; }
+    .search-box select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .search-box select option { background: #16213e; color: #e0e0e0; }
+
+    /* Status messages */
+    #status {
+      text-align: center;
+      padding: 14px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-size: 0.95rem;
+      display: none;
+    }
+    #status.loading { background: #1a3a5c; color: #63b3ed; display: block; }
+    #status.error   { background: #3d1a1a; color: #fc8181; display: block; }
+    #status.info    { background: #1a3d2b; color: #68d391; display: block; }
+
+    /* Cards grid */
+    #results {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: #16213e;
+      border: 1px solid #0f3460;
+      border-radius: 14px;
+      padding: 24px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(233, 69, 96, 0.2);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #0f3460;
+    }
+
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #e94560, #0f3460);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .card-header-info h3 {
+      font-size: 1.1rem;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .card-header-info span {
+      font-size: 0.82rem;
+      color: #607090;
+    }
+
+    .field {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .field:last-child { margin-bottom: 0; }
+
+    .field-icon {
+      font-size: 1rem;
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .field-content label {
+      display: block;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #607090;
+      margin-bottom: 2px;
+    }
+
+    .field-content span {
+      font-size: 0.95rem;
+      color: #e0e0e0;
+    }
+
+    .no-results {
+      text-align: center;
+      color: #607090;
+      padding: 40px;
+      grid-column: 1 / -1;
+    }
+
+    /* Spinner */
+    .spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid #63b3ed;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Summary bar */
+    #summary {
+      font-size: 0.85rem;
+      color: #607090;
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 10px;
+    }
+
+    .btn-fetch {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      background: transparent;
+      color: #63b3ed;
+      border: 1.5px solid #63b3ed;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.25s, color 0.25s, transform 0.1s;
+    }
+    .btn-fetch:hover   { background: rgba(99,179,237,0.1); }
+    .btn-fetch:active  { transform: scale(0.97); }
+    .btn-fetch:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-add {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      background: #e94560;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.25s, transform 0.1s;
+    }
+    .btn-add:hover  { background: #c73652; }
+    .btn-add:active { transform: scale(0.97); }
+
+    /* ── Modal overlay ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      padding: 16px;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    /* ── Modal box ── */
+    .modal {
+      background: #16213e;
+      border: 1px solid #0f3460;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(20px);
+      transition: transform 0.2s;
+      overflow: hidden;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 16px;
+      border-bottom: 1px solid #0f3460;
+      flex-shrink: 0;
+    }
+    .modal-header h2 { font-size: 1.15rem; color: #fff; font-weight: 600; }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #607090;
+      font-size: 1.3rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .modal-close:hover { color: #e94560; background: rgba(233,69,96,0.1); }
+
+    /* ── Modal form ── */
+    .modal-body {
+      padding: 20px 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 16px;
+    }
+    .form-group:last-child { margin-bottom: 0; }
+
+    .form-group label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #607090;
+      margin-bottom: 6px;
+    }
+    .form-group label .required { color: #e94560; margin-left: 2px; }
+
+    .form-group input,
+    .form-group textarea {
+      padding: 10px 14px;
+      background: #0f1a2e;
+      border: 1.5px solid #0f3460;
+      border-radius: 8px;
+      color: #e0e0e0;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+      resize: none;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus { border-color: #e94560; }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: #3a4a60; }
+    .form-group input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(0.5);
+      cursor: pointer;
+    }
+
+    /* ── Modal footer ── */
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px 24px 20px;
+      border-top: 1px solid #0f3460;
+      flex-shrink: 0;
+    }
+
+    .btn-secondary {
+      padding: 10px 22px;
+      background: transparent;
+      color: #a0aec0;
+      border: 1.5px solid #0f3460;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-secondary:hover { border-color: #607090; color: #e0e0e0; }
+
+    .btn-primary {
+      padding: 10px 26px;
+      background: #e94560;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover    { background: #c73652; }
+    .btn-primary:disabled { background: #5a2030; cursor: not-allowed; opacity: 0.7; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>&#128101; Customer Lookup</h1>
+      <p>Select a <strong>field</strong> then a <strong>value</strong> to filter customer records</p>
+    </header>
+
+    <div class="search-box">
+      <select id="filterField" aria-label="Filter by field" disabled>
+        <option value="">— Fetch records to filter —</option>
+      </select>
+      <select id="filterValue" aria-label="Filter by value" disabled>
+        <option value="">— Select a field first —</option>
+      </select>
+    </div>
+
+    <div class="toolbar">
+      <button id="fetchBtn" class="btn-fetch" onclick="handleFetch()">🔄 Fetch Records</button>
+      <button class="btn-add" onclick="openModal()">➕ Add Customer</button>
+    </div>
+
+    <div id="status"></div>
+    <div id="summary"></div>
+    <div id="results"></div>
+  </div>
+
+  <!-- ── Add Customer Modal ── -->
+  <div id="modalOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">➕ Add Customer</h2>
+        <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+      </div>
+
+      <form id="insertForm" onsubmit="handleInsert(event)" novalidate>
+        <div class="modal-body">
+
+          <div class="form-row">
+              <div class="form-group">
+                  <label for="fName">Full Name <span class="required">*</span></label>
+                  <input id="fName" type="text" placeholder="Customer full name" required />
+              </div>
+              <div class="form-group">
+              <label for="fPhone">Phone Number</label>
+              <input id="fPhone" type="tel" placeholder="+1 234 567 8900" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="fAddress">Address</label>
+            <textarea id="fAddress" rows="2" placeholder="Street, City, State"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn-primary" id="submitBtn">Save Customer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    /* ─── Config ─── */
+    const CONFIG = {
+      scriptUrl: `https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec?sheet=Sheet2`,
+    };
+
+    const FIELD_KEYS = {
+      id:        ['id', 'customer id', 'cust_id', 'custid'],
+      name:      ['name', 'customer name', 'full name', 'fullname'],
+      address:   ['address', 'addr', 'location'],
+      issueDate: ['issue date', 'issuedate', 'issued date', 'date', 'issue_date'],
+      issueBy:   ['issue by', 'issued by', 'issuedby', 'issued_by', 'officer', 'agent'],
+      phone:     ['phone', 'phone number', 'mobile', 'contact', 'phonenumber', 'phone_number'],
+    };
+
+    let allData = [];
+
+    /* ─── Helpers ─── */
+    const $ = id => document.getElementById(id);
+
+    function setStatus(msg, type) {
+      const el = $('status');
+      el.style.display = '';   // clear inline override so CSS class controls visibility
+      el.innerHTML = (type === 'loading' ? '<span class="spinner"></span>' : '') + msg;
+      el.className = type;
+    }
+
+    /**
+     * Normalise whatever the API returns into a flat array of plain objects.
+     *
+     * Handles:
+     *  • Array of objects  → used as-is
+     *  • 2-D array (GAS getValues) → first row = headers, rest = data rows
+     *  • Wrapper object with known key (data / records / values)
+     *  • Wrapper object with any other key → first array value wins
+     */
+    function normalizeResponse(json) {
+      let rows;
+
+      if (Array.isArray(json)) {
+        rows = json;
+      } else if (json && typeof json === 'object') {
+        rows = json.data ?? json.records ?? json.values
+          ?? Object.values(json).find(v => Array.isArray(v))
+          ?? [];
+      } else {
+        rows = [];
+      }
+
+      // 2-D array → convert to array of objects using first row as headers
+      if (rows.length > 0 && Array.isArray(rows[0])) {
+        const headers = rows[0].map(h => String(h ?? '').trim());
+        return rows
+          .slice(1)
+          .filter(row => Array.isArray(row) && row.some(c => c !== '' && c != null))
+          .map(row => Object.fromEntries(headers.map((h, i) => [h, row[i] ?? ''])));
+      }
+
+      // Filter out null / non-object entries
+      return rows.filter(r => r !== null && typeof r === 'object');
+    }
+
+    /**
+     * Safely read a field from a row by trying a list of possible header names.
+     * Returns '—' when nothing matches.
+     */
+    function val(row, keys) {
+      if (!row || typeof row !== 'object') return '—';
+      for (const k of keys) {
+        const found = Object.keys(row).find(
+          rk => rk.trim().toLowerCase() === k.toLowerCase()
+        );
+        if (found !== undefined && row[found] !== undefined && row[found] !== '' && row[found] !== null)
+          return row[found];
+      }
+      return '—';
+    }
+
+    const initials = name =>
+      String(name).split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
+
+    /* ─── Fetch all data on page load ─── */
+    async function loadData() {
+      setStatus('Loading customer data…', 'loading');
+      try {
+        const res = await fetch(CONFIG.scriptUrl);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        // Use text() + JSON.parse — GAS sometimes serves text/plain even for JSON
+        const text = await res.text();
+        let json;
+        try { json = JSON.parse(text); }
+        catch { throw new Error('Response is not valid JSON. Raw: ' + text.slice(0, 120)); }
+
+        console.log('[CustomerLookup] raw response:', json);
+        allData = normalizeResponse(json);
+        console.log('[CustomerLookup] normalised rows:', allData.length, 'sample:', allData[0]);
+
+        if (allData.length === 0) {
+          setStatus('⚠️ Sheet returned 0 rows. Check the sheet name and script permissions.', 'info');
+        } else {
+          populateFieldDropdown();
+          setStatus(`✅ ${allData.length} records loaded.`, 'info');
+          renderCards(allData);
+        }
+      } catch (err) {
+        console.error('[CustomerLookup] load error:', err);
+        setStatus(`❌ Failed to load data: ${err.message}`, 'error');
+      }
+    }
+
+    /* ─── Dropdown population ─── */
+
+    // Called once after data loads — builds the "filter by field" options
+    function populateFieldDropdown() {
+      const fieldSelect = $('filterField');
+      const FIELD_LABELS = [
+        ['id',        'Customer ID'],
+        ['name',      'Name'],
+        ['address',   'Address'],
+        ['issueDate', 'Issue Date'],
+        ['issueBy',   'Issued By'],
+        ['phone',     'Phone Number'],
+      ];
+
+      fieldSelect.innerHTML =
+        `<option value="">— Filter by Field —</option>` +
+        FIELD_LABELS.map(([k, label]) => `<option value="${k}">${label}</option>`).join('');
+      fieldSelect.disabled = false;
+    }
+
+    // Called when the user picks a field — fills the value dropdown with unique options
+    function onFieldChange() {
+      const fieldKey    = $('filterField').value;
+      const valueSelect = $('filterValue');
+      const summaryEl   = $('summary');
+
+      // Reset value dropdown
+      valueSelect.innerHTML = '<option value="">— All —</option>';
+      valueSelect.disabled  = true;
+      summaryEl.style.display = 'none';
+      renderCards(allData);
+
+      if (!fieldKey) return;
+
+      const keys   = FIELD_KEYS[fieldKey];
+      const unique = [...new Set(
+        allData.map(row => val(row, keys)).filter(v => v !== '—')
+      )].sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
+
+      if (unique.length === 0) return;
+
+      valueSelect.innerHTML +=
+        unique.map(v => `<option value="${escHtml(String(v))}">${escHtml(String(v))}</option>`).join('');
+      valueSelect.disabled = false;
+    }
+
+    // Called when the user picks a value — filters and renders matching cards
+    function onValueChange() {
+      const fieldKey      = $('filterField').value;
+      const selectedValue = $('filterValue').value;
+      const summaryEl     = $('summary');
+
+      if (!fieldKey || !selectedValue) {
+        summaryEl.style.display = 'none';
+        renderCards(allData);
+        return;
+      }
+
+      const keys     = FIELD_KEYS[fieldKey];
+      const filtered = allData.filter(row =>
+        String(val(row, keys)) === selectedValue
+      );
+
+      summaryEl.style.display = 'block';
+      summaryEl.textContent   = `Found ${filtered.length} result(s)`;
+      renderCards(filtered);
+    }
+
+    // Tiny helper — prevent XSS in dynamically-built option text
+    function escHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    /* ─── Event listeners ─── */
+    $('filterField').addEventListener('change', onFieldChange);
+    $('filterValue').addEventListener('change', onValueChange);
+
+    function buildCard(row) {
+      const name = val(row, FIELD_KEYS.name);
+      const id   = val(row, FIELD_KEYS.id);
+      const fields = [
+        ['📍', 'Address',      val(row, FIELD_KEYS.address)],
+        ['📅', 'Issue Date',   val(row, FIELD_KEYS.issueDate)],
+        ['👤', 'Issued By',    val(row, FIELD_KEYS.issueBy)],
+        ['📞', 'Phone Number', val(row, FIELD_KEYS.phone)],
+      ];
+
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div class="avatar">${initials(name)}</div>
+            <div class="card-header-info">
+              <h3>${name}</h3>
+              <span>ID: ${id}</span>
+            </div>
+          </div>
+          ${fields.map(([icon, label, value]) => `
+            <div class="field">
+              <span class="field-icon">${icon}</span>
+              <div class="field-content">
+                <label>${label}</label>
+                <span>${value}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderCards(rows) {
+      try {
+        $('results').innerHTML = rows.length
+          ? rows.map(buildCard).join('')
+          : `<div class="no-results">🔍 No customers found. Try a different selection.</div>`;
+      } catch (err) {
+        console.error('[CustomerLookup] renderCards error:', err);
+        setStatus(`❌ Render error: ${err.message}`, 'error');
+      }
+    }
+
+
+    /* ─── Modal ─── */
+    function openModal() {
+      $('insertForm').reset();
+      $('modalOverlay').classList.add('open');
+      setTimeout(() => $('fName').focus(), 50);
+    }
+
+    function closeModal() {
+      $('modalOverlay').classList.remove('open');
+    }
+
+    // Close when clicking the backdrop
+    $('modalOverlay').addEventListener('click', e => {
+      if (e.target === $('modalOverlay')) closeModal();
+    });
+
+    // Close on Escape
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    async function handleInsert(e) {
+      e.preventDefault();
+
+      // Client-side validation
+      const name = $('fName').value.trim();
+      if (!name) {
+        setStatus('⚠️ Customer Full Name is required.', 'error');
+        return;
+      }
+
+      const submitBtn = $('submitBtn');
+      submitBtn.disabled    = true;
+      submitBtn.textContent = 'Saving…';
+
+      try {
+        const payload = {
+          sheet:    'Sheet2',
+          name:     name,
+          address:  $('fAddress').value.trim(),
+          phone:    $('fPhone').value.trim(),
+          issuedby: 'PKR'
+        };
+        console.log('[CustomerLookup] inserting:', payload);
+
+        // Send URL-encoded form data so GAS can read e.parameter.name/address/phone/etc.
+        const formBody = new URLSearchParams(payload).toString();
+        const res = await fetch(CONFIG.scriptUrl, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+          body:    formBody
+        });
+
+        const text = await res.text();
+        let ok = res.ok;
+        try {
+          const json = JSON.parse(text);
+          if (json.status === 'error' || json.result === 'error') ok = false;
+        } catch { /* plain-text response — trust res.ok */ }
+
+        if (!ok) throw new Error(text.slice(0, 160) || `HTTP ${res.status}`);
+
+        closeModal();
+        setStatus(`✅ Customer "${name}" added. Refreshing…`, 'info');
+        await loadData();
+        $('fetchBtn').textContent = '🔄 Refresh';   // keep button label consistent
+
+      } catch (err) {
+        console.error('[CustomerLookup] insert error:', err);
+        setStatus(`❌ Save failed: ${err.message}`, 'error');
+      } finally {
+        submitBtn.disabled    = false;
+        submitBtn.textContent = 'Save Customer';
+      }
+    }
+
+    /* ─── Fetch button ─── */
+    async function handleFetch() {
+      const btn = $('fetchBtn');
+      btn.disabled    = true;
+      btn.textContent = '⏳ Fetching…';
+      try {
+        await loadData();
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = '🔄 Refresh';
+      }
+    }
+
+    /* ─── Boot ─── */
+    // Show idle state — don't fetch until the user clicks Fetch Records
+    $('results').innerHTML =
+      `<div class="no-results">👆 Click <strong>Fetch Records</strong> to load customer data.</div>`;
+  </script>
+</body>
+</html>
+

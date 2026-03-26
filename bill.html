@@ -42,7 +42,7 @@
 
   <h2>Prasanna Bill Entry Sheet</h2>
 
-  <div id="loading">⏳ Loading...</div>
+  <div id="loading"> Loading...</div>
   <p id="status"></p>
 
   <form id="dataForm">
@@ -93,7 +93,7 @@
       .then(text => renderBill(JSON.parse(text)))
       .catch(err => {
         console.error(err);
-        statusEl.textContent = "❌ Error inserting data.";
+        statusEl.textContent = "Error inserting data.";
       })
       .finally(() => toggleLoading(false));
     }
@@ -168,7 +168,7 @@
     <tr align="left">
       <th style="border:1px solid #000;">Total Amount</th>
       <td style="border:1px solid #000;font-weight:bold;">
-        ₹ ${data.data[4]}
+        Rs. ${data.data[4]}
       </td>
     </tr>
   </table>
@@ -186,8 +186,8 @@
 </div>
 
           <br>
-          <button onclick="printBill()">🖨️ Print</button>
-          <button onclick="closeBill()">❌ Close</button>
+          <button onclick="printBill()"> Print</button>
+          <button onclick="location.reload();"> Close</button>
         </div>
       `;
     }
@@ -200,14 +200,6 @@
       document.body.innerHTML = content;
       window.print();
       document.body.innerHTML = original;
-    }
-
-    /* ✅ CLOSE LOGIC */
-    function closeBill() {
-      statusEl.innerHTML = "";
-      form.reset();
-      form.style.display = "block";
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   </script>
 

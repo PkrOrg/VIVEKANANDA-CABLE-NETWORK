@@ -46,9 +46,9 @@
   <p id="status"></p>
 
   <form id="dataForm">
-    <input type="number" id="id" placeholder="Enter Customer Id" required />
-    <input type="text" id="cname" placeholder="Enter Customer Name" required />
-    <input type="number" id="amount" placeholder="Enter Amount" required />
+    <input type="number" id="id" placeholder="Enter Customer Id" required /><br>
+    <input type="text" id="cname" placeholder="Enter Customer Name" required /><br>
+    <input type="number" id="amount" placeholder="Enter Amount" required /><br>
 
     <select id="month" required>
       <option value="">Select Month</option>
@@ -56,7 +56,7 @@
       <option>April</option><option>May</option><option>June</option>
       <option>July</option><option>August</option><option>September</option>
       <option>October</option><option>November</option><option>December</option>
-    </select>
+    </select><br>
 
     <button type="submit">Submit</button>
   </form>
@@ -200,8 +200,6 @@
       document.body.innerHTML = content;
       window.print();
       document.body.innerHTML = original;
-
-      location.reload(); // ensures scripts reattach cleanly
     }
 
     /* ✅ CLOSE LOGIC */

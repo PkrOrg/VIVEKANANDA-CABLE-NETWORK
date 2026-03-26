@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Prasanna Bill Entry sheet</title>
+  <title>Prasanna Bill Entry Sheet</title>
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -30,114 +31,121 @@
     button:hover {
       background: #005fa3;
     }
+    #loading {
+      display: none;
+      font-weight: bold;
+    }
   </style>
 </head>
+
 <body>
-  <h2>Prasanna Bill Entry sheet</h2>
+
+  <h2>Prasanna Bill Entry Sheet</h2>
+
+  <div id="loading">⏳ Loading...</div>
   <p id="status"></p>
-<div id="loading" style="display:none;">⏳ Loading...</div>
 
   <form id="dataForm">
-    <input type="number" id="id" placeholder="Enter Id" required />
-    <input type="text" id="name" placeholder="Enter Name" required />
+    <input type="number" id="id" placeholder="Enter Customer Id" required />
+    <input type="text" id="cname" placeholder="Enter Customer Name" required />
     <input type="number" id="amount" placeholder="Enter Amount" required />
 
     <select id="month" required>
       <option value="">Select Month</option>
-      <option>January</option>
-      <option>February</option>
-      <option>March</option>
-      <option>April</option>
-      <option>May</option>
-      <option>June</option>
-      <option>July</option>
-      <option>August</option>
-      <option>September</option>
-      <option>October</option>
-      <option>November</option>
-      <option>December</option>
+      <option>January</option><option>February</option><option>March</option>
+      <option>April</option><option>May</option><option>June</option>
+      <option>July</option><option>August</option><option>September</option>
+      <option>October</option><option>November</option><option>December</option>
     </select>
+
     <button type="submit">Submit</button>
   </form>
 
-  <p id="status"></p>
-
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec";
+    const scriptURL =
+      "https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec";
 
-    document.getElementById("dataForm").addEventListener("submit", e => {
-       document.querySelector("#dataForm button").disabled = true;
-       document.getElementById("loading").style.display = "block";
-       document.getElementById("status").textContent = "";
-       e.preventDefault();
+    const form = document.getElementById("dataForm");
+    const statusEl = document.getElementById("status");
+    const loadingEl = document.getElementById("loading");
+    const submitBtn = form.querySelector("button");
 
-       const name = document.getElementById("name").value;
-       const month = document.getElementById("month").value;
-       const id = document.getElementById("id").value;
-       const issuedby = "PKR";
-       const amount = document.getElementById("amount").value;
+    form.addEventListener("submit", submitData);
 
-       
+    function submitData(e) {
+      e.preventDefault();
+      toggleLoading(true);
 
-       fetch(scriptURL, {
-          method: "POST",
-          headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-          },
-          body: "name="+name+"&month="+month+"&id="+id+"&issuedby="+issuedby+"&amount="+amount 
-       })
-       .then(response => response.text())
-       .then(result => {
-const data = JSON.parse(result);
-          let output = `
-    ✅ Data Inserted Successfully! <br><br>
-    <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; margin:auto;">
-    <tr>
-      <th align='left'>Bill Id</th>
-      <td align='left'>${data.data[0]}</td>
-    </tr>
-    <tr>
-      <th align='left'>Customer Id</th>
-      <td align='left'>${data.data[1]}</td>
-    </tr>
-    <tr>
-      <th align='left'>Name</th>
-      <td align='left'>${data.data[2]}</td>
-    </tr>
-    <tr>
-      <th align='left'>Month</th>
-      <td align='left'>${data.data[3]}</td>
-    </tr>
-    <tr>
-      <th align='left'>Amount</th>
-      <td align='left'>${data.data[4]}</td>
-    </tr>
-    <tr>
-      <th align='left'>Issued Date</th>
-      <td align='left'>${data.data[5]}</td>
-    </tr>
-    <tr>
-      <th align='left'>Issued By</th>
-      <td align='left'>${data.data[6]}</td>
-    </tr>
-  </table>
-  <button onclick="printData()">🖨️ Print</button>
-  `;
+      const payload = new URLSearchParams({
+        id: id.value,
+        name: cname.value,
+        amount: amount.value,
+        month: month.value,
+        issuedby: "PKR"
+      });
 
-  document.getElementById("status").innerHTML = output;
-  //document.getElementById("dataForm").reset();
-       })
-    .catch(error => {
-       document.getElementById("status").textContent = "Error inserting data.";
-       console.error("Error:", error);
-    })
-    .finally(() => {
-       // Hide loading symbol
-       document.getElementById("loading").style.display = "none";
-       document.querySelector("#dataForm button").disabled = false;
-    });
- });
+      fetch(scriptURL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: payload
+      })
+      .then(res => res.text())
+      .then(text => renderBill(JSON.parse(text)))
+      .catch(err => {
+        console.error(err);
+        statusEl.textContent = "❌ Error inserting data.";
+      })
+      .finally(() => toggleLoading(false));
+    }
 
+    function toggleLoading(state) {
+      loadingEl.style.display = state ? "block" : "none";
+      submitBtn.disabled = state;
+    }
+
+    function renderBill(data) {
+      form.style.display = "none";
+      statusEl.innerHTML = `
+        <div id="billArea">
+          <br>
+          <table border="1" cellpadding="6" cellspacing="0"
+                 style="border-collapse:collapse;margin:auto;">
+            <tr><th align="left">Bill Id</th><td>${data.data[0]}</td></tr>
+            <tr><th align="left">Customer Id</th><td>${data.data[1]}</td></tr>
+            <tr><th align="left">Name</th><td>${data.data[2]}</td></tr>
+            <tr><th align="left">Month</th><td>${data.data[3]}</td></tr>
+            <tr><th align="left">Amount</th><td>${data.data[4]}</td></tr>
+            <tr><th align="left">Issued Date</th><td>${data.data[5]}</td></tr>
+            <tr><th align="left">Issued By</th><td>${data.data[6]}</td></tr>
+          </table>
+
+          <br>
+          <button onclick="printBill()">🖨️ Print</button>
+          <button onclick="closeBill()">❌ Close</button>
+        </div>
+      `;
+    }
+
+    /* ✅ PRINT LOGIC */
+    function printBill() {
+      const content = document.getElementById("billArea").innerHTML;
+      const original = document.body.innerHTML;
+
+      document.body.innerHTML = content;
+      window.print();
+      document.body.innerHTML = original;
+
+      location.reload(); // ensures scripts reattach cleanly
+    }
+
+    /* ✅ CLOSE LOGIC */
+    function closeBill() {
+      statusEl.innerHTML = "";
+      form.reset();
+      form.style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   </script>
+
 </body>
 </html>

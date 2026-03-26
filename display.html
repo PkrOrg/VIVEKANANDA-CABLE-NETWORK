@@ -55,7 +55,7 @@
       <option value="">All</option>
     </select> 
     <strong>Months</strong>
-    <select id="monthFilter">
+    <select id="monthFilter" >
       <option value="">All</option>
     </select>
     <button onclick="applyFilters()">Apply Filters</button>
@@ -105,12 +105,12 @@
 
         // Name
         const tdName = document.createElement("td");
-        tdName.textContent = row[1] || "";
+        tdName.textContent = row[2] || "";
         tr.appendChild(tdName);
 
         // Month
         const tdMonth = document.createElement("td");
-        tdMonth.textContent = row[2] || "";
+        tdMonth.textContent = row[3] || "";
         tr.appendChild(tdMonth);
 
         table.appendChild(tr);
@@ -123,8 +123,8 @@
       const monthSet = new Set();
 
       data.forEach(row => {
-        if (row[1]) nameSet.add(row[1]);
-        if (row[2]) monthSet.add(row[2]);
+        if (row[2]) nameSet.add(row[2]);
+        if (row[3]) monthSet.add(row[3]);
       });
 
       const nameFilter = document.getElementById("nameFilter");
@@ -165,8 +165,8 @@
       const monthValue = document.getElementById("monthFilter").value;
 
       const filteredRows = allData.filter(row => {
-        const nameMatch = !nameValue || (row[1] && row[1].toLowerCase() === nameValue);
-        const monthMatch = !monthValue || (row[2] && row[2].toLowerCase() === monthValue);
+        const nameMatch = !nameValue || (row[2] && row[2].toLowerCase() === nameValue);
+        const monthMatch = !monthValue || (row[3] && row[3].toLowerCase() === monthValue);
         return nameMatch && monthMatch;
       });
 

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Prasanna Bill Entry Sheet</title>
+  <title>ABCD Bill Entry Sheet</title>
 
   <style>
     body {
@@ -40,14 +40,20 @@
 
 <body>
 
-  <h2>Prasanna Bill Entry Sheet</h2>
+  <h2>ABCD Bill Entry Sheet</h2>
 
   <div id="loading"> Loading...</div>
   <p id="status"></p>
 
   <form id="dataForm">
-    <input type="number" id="id" placeholder="Enter Customer Id" required /><br>
-    <input type="text" id="cname" placeholder="Enter Customer Name" required /><br>
+    <select id="customerIdSelect" required disabled>
+      <option value="">Loading customer IDs...</option>
+    </select><br>
+
+    <select id="customerNameSelect" required disabled>
+      <option value="">Loading customer names...</option>
+    </select><br>
+
     <input type="number" id="amount" placeholder="Enter Amount" required /><br>
 
     <select id="month" required>
@@ -62,25 +68,163 @@
   </form>
 
   <script>
-    const scriptURL =
-      "https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec";
+    const scriptURL = `https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec?sheet=Sheet2`;
 
     const form = document.getElementById("dataForm");
     const statusEl = document.getElementById("status");
     const loadingEl = document.getElementById("loading");
+    const customerIdSelect = document.getElementById("customerIdSelect");
+    const customerNameSelect = document.getElementById("customerNameSelect");
+    const amountInput = document.getElementById("amount");
+    const monthSelect = document.getElementById("month");
     const submitBtn = form.querySelector("button");
 
     form.addEventListener("submit", submitData);
+    customerIdSelect.addEventListener("change", () => syncCustomerSelects("id"));
+    customerNameSelect.addEventListener("change", () => syncCustomerSelects("name"));
+    loadCustomers();
+
+    async function loadCustomers() {
+      customerIdSelect.disabled = true;
+      customerNameSelect.disabled = true;
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch(scriptURL);
+        const text = await response.text();
+        const customers = normalizeCustomers(text);
+
+        if (!customers.length) {
+          throw new Error("No customer records found.");
+        }
+
+        customerIdSelect.innerHTML = `
+          <option value="">Select Customer ID</option>
+          ${customers
+            .map(
+              customer => `<option value="${escapeHtml(customer.id)}">${escapeHtml(customer.id)}</option>`
+            )
+            .join("")}
+        `;
+
+        customerNameSelect.innerHTML = `
+          <option value="">Select Customer Name</option>
+          ${customers
+            .map(
+              customer => `
+                <option value="${escapeHtml(customer.id)}" data-name="${escapeHtml(customer.name)}">
+                  ${escapeHtml(customer.name)}
+                </option>`
+            )
+            .join("")}
+        `;
+
+        customerIdSelect.disabled = false;
+        customerNameSelect.disabled = false;
+        submitBtn.disabled = false;
+      } catch (err) {
+        console.error(err);
+        customerIdSelect.innerHTML = '<option value="">Unable to load customer IDs</option>';
+        customerNameSelect.innerHTML = '<option value="">Unable to load customer names</option>';
+        statusEl.textContent = "Unable to load customer list. Check the customer data URL.";
+      }
+    }
+
+    function syncCustomerSelects(source) {
+      if (source === "id") {
+        customerNameSelect.value = customerIdSelect.value;
+      } else {
+        customerIdSelect.value = customerNameSelect.value;
+      }
+    }
+
+    function normalizeCustomers(rawText) {
+      const parsed = JSON.parse(rawText);
+      const rows = Array.isArray(parsed)
+        ? parsed
+        : Array.isArray(parsed.data)
+          ? parsed.data
+          : Array.isArray(parsed.customers)
+            ? parsed.customers
+            : Array.isArray(parsed.records)
+              ? parsed.records
+              : [];
+
+      return rows
+        .map(row => {
+          if (Array.isArray(row)) {
+            const [customerId, customerName] = row;
+
+            if (isHeaderRow(customerId, customerName) || customerId == null || customerName == null) {
+              return null;
+            }
+
+            return {
+              id: String(customerId).trim(),
+              name: String(customerName).trim()
+            };
+          }
+
+          if (row && typeof row === "object") {
+            const customerId = row.id ?? row.customerId ?? row.customerID ?? row.ID;
+            const customerName = row.name ?? row.customerName ?? row.customer ?? row.cname;
+
+            if (isHeaderRow(customerId, customerName) || customerId == null || customerName == null) {
+              return null;
+            }
+
+            return {
+              id: String(customerId).trim(),
+              name: String(customerName).trim()
+            };
+          }
+
+          return null;
+        })
+        .filter(Boolean);
+    }
+
+    function isHeaderRow(customerId, customerName) {
+      const idText = String(customerId ?? "").trim().toLowerCase();
+      const nameText = String(customerName ?? "").trim().toLowerCase();
+
+      return ["id", "customer id", "customerid"].includes(idText)
+        && ["name", "customer name", "customername", "cname"].includes(nameText);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
 
     function submitData(e) {
       e.preventDefault();
+
+      const selectedId = customerIdSelect.value;
+      const selectedNameOption = customerNameSelect.options[customerNameSelect.selectedIndex];
+
+      if (!selectedId || !selectedNameOption || !selectedNameOption.dataset.name) {
+        statusEl.textContent = "Please select customer ID and customer name.";
+        return;
+      }
+
+      if (customerNameSelect.value !== selectedId) {
+        statusEl.textContent = "Customer ID and name do not match.";
+        return;
+      }
+
       toggleLoading(true);
+      statusEl.textContent = "";
 
       const payload = new URLSearchParams({
-        id: id.value,
-        name: cname.value,
-        amount: amount.value,
-        month: month.value,
+        id: selectedId,
+        name: selectedNameOption.dataset.name,
+        amount: amountInput.value,
+        month: monthSelect.value,
         issuedby: "PKR"
       });
 
@@ -100,6 +244,8 @@
 
     function toggleLoading(state) {
       loadingEl.style.display = state ? "block" : "none";
+      customerIdSelect.disabled = state;
+      customerNameSelect.disabled = state;
       submitBtn.disabled = state;
     }
 
@@ -116,7 +262,7 @@
 
   <!-- Company Header -->
   <div style="text-align:center;">
-    <h2 style="margin:0;">PRASANNA COMPANY</h2>
+    <h2 style="margin:0;">ABCD COMPANY</h2>
     <p style="margin:4px 0;">
       Brahmanakraka, Nellore District, Andhra Pradesh
     </p>
@@ -181,7 +327,7 @@
   </p>
 
   <p style="text-align:center;font-size:12px;">
-    Thank you for choosing Prasanna Company.
+    Thank you for choosing ABCD Company.
   </p>
 </div>
 

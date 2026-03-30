@@ -1,12 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+	<a href="main.html" style="float: right;" class="main-btn">Go to Main Page</a>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Customer Lookup</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
+	.main-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #0078D7; /* Microsoft blue */
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+  }
+  .main-btn:hover {
+    background-color: #005A9E;
+  }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
@@ -398,9 +411,11 @@
     </header>
 
     <div class="search-box">
-      <select id="filterField" aria-label="Filter by field" disabled>
+      <select id="filterField" aria-label="Filter by field" disabled onchange='setStatus("")'>
         <option value="">— Fetch records to filter —</option>
       </select>
+    </div>
+    <div class="search-box">
       <select id="filterValue" aria-label="Filter by value" disabled>
         <option value="">— Select a field first —</option>
       </select>
@@ -423,7 +438,7 @@
         <h2 id="modalTitle">➕ Add Customer</h2>
         <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
       </div>
-
+      <div id="customerstatus"></div>
       <form id="insertForm" onsubmit="handleInsert(event)" novalidate>
         <div class="modal-body">
 
@@ -433,13 +448,13 @@
                   <input id="fName" type="text" placeholder="Customer full name" required />
               </div>
               <div class="form-group">
-              <label for="fPhone">Phone Number</label>
-              <input id="fPhone" type="tel" placeholder="+1 234 567 8900" />
+              <label for="fPhone">Phone Number <span class="required">*</span></label>
+              <input id="fPhone" type="tel" placeholder="+91 934 567 8900"  required/>
             </div>
           </div>
           <div class="form-group">
-            <label for="fAddress">Address</label>
-            <textarea id="fAddress" rows="2" placeholder="Street, City, State"></textarea>
+            <label for="fAddress">Address <span class="required">*</span></label>
+            <textarea id="fAddress" rows="2" placeholder="Street, City, State"  required></textarea>
           </div>
         </div>
         <div class="modal-footer">
@@ -472,6 +487,13 @@
 
     function setStatus(msg, type) {
       const el = $('status');
+      el.style.display = '';   // clear inline override so CSS class controls visibility
+      el.innerHTML = (type === 'loading' ? '<span class="spinner"></span>' : '') + msg;
+      el.className = type;
+    }
+
+    function setCustomerStatus(msg, type) {
+      const el = $('customerstatus');
       el.style.display = '';   // clear inline override so CSS class controls visibility
       el.innerHTML = (type === 'loading' ? '<span class="spinner"></span>' : '') + msg;
       el.className = type;
@@ -533,9 +555,12 @@
 
     /* ─── Fetch all data on page load ─── */
     async function loadData() {
+      $('summary').style.display = 'none';
       setStatus('Loading customer data…', 'loading');
       try {
+	console.time("myTimer");   // Start the timer
         const res = await fetch(CONFIG.scriptUrl);
+        console.timeEnd("myTimer"); // End the timer and log the elapsed time
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         // Use text() + JSON.parse — GAS sometimes serves text/plain even for JSON
@@ -552,8 +577,10 @@
           setStatus('⚠️ Sheet returned 0 rows. Check the sheet name and script permissions.', 'info');
         } else {
           populateFieldDropdown();
-          setStatus(`✅ ${allData.length} records loaded.`, 'info');
+          setStatus(`✅ Total Records ${allData.length}.`, 'info');
+          console.time("myTimer2");   // Start the timer
           renderCards(allData);
+          console.timeEnd("myTimer2"); // End the timer and log the elapsed time
         }
       } catch (err) {
         console.error('[CustomerLookup] load error:', err);
@@ -579,6 +606,8 @@
         `<option value="">— Filter by Field —</option>` +
         FIELD_LABELS.map(([k, label]) => `<option value="${k}">${label}</option>`).join('');
       fieldSelect.disabled = false;
+	$('filterValue').innerHTML = `<option value="">— Filter by Field Value —</option>`;
+        $('filterValue').disabled=true;
     }
 
     // Called when the user picks a field — fills the value dropdown with unique options
@@ -673,7 +702,7 @@
     function renderCards(rows) {
       try {
         $('results').innerHTML = rows.length
-          ? rows.map(buildCard).join('')
+          ? rows.map(buildCard).reverse().join('')
           : `<div class="no-results">🔍 No customers found. Try a different selection.</div>`;
       } catch (err) {
         console.error('[CustomerLookup] renderCards error:', err);
@@ -705,13 +734,21 @@
 
     async function handleInsert(e) {
       e.preventDefault();
-
+        setCustomerStatus('', '');
       // Client-side validation
       const name = $('fName').value.trim();
       if (!name) {
-        setStatus('⚠️ Customer Full Name is required.', 'error');
+        setCustomerStatus('⚠️ Customer Full Name is required.', 'error');
         return;
       }
+	if (!$('fPhone').value.trim()) {
+        	setCustomerStatus('⚠️ Customer Phone is required.', 'error');
+       		return;
+        }
+	if (!$('fAddress').value.trim()) {
+        	setCustomerStatus('⚠️ Customer Address is required.', 'error');
+       		return;
+        }
 
       const submitBtn = $('submitBtn');
       submitBtn.disabled    = true;
@@ -740,22 +777,24 @@
         try {
           const json = JSON.parse(text);
           if (json.status === 'error' || json.result === 'error') ok = false;
-        } catch { /* plain-text response — trust res.ok */ }
+          alert("Customer "+ json.data[1] + "(" + json.data[0] +") is saved successfully");
+        } catch {  }
 
         if (!ok) throw new Error(text.slice(0, 160) || `HTTP ${res.status}`);
-
-        closeModal();
-        setStatus(`✅ Customer "${name}" added. Refreshing…`, 'info');
-        await loadData();
-        $('fetchBtn').textContent = '🔄 Refresh';   // keep button label consistent
+	
 
       } catch (err) {
         console.error('[CustomerLookup] insert error:', err);
         setStatus(`❌ Save failed: ${err.message}`, 'error');
+        alert("Failed to Save");
       } finally {
         submitBtn.disabled    = false;
         submitBtn.textContent = 'Save Customer';
       }
+	closeModal();
+        setStatus(`✅ Customer "${name}" added. Refreshing…`, 'info');
+        await loadData();
+        $('fetchBtn').textContent = '🔄 Refresh';   // keep button label consistent
     }
 
     /* ─── Fetch button ─── */

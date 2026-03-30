@@ -1,5 +1,12 @@
 <!DOCTYPE html>
 <html>
+<button onclick="window.location.href = 'Main.html'" style="
+  position: fixed;
+  right: 2px;
+  top: 5%;
+  cursor: pointer;
+"> Back to Main Page
+</button>
 <head>
   <title>ABCD Bill Entry Sheet</title>
 
@@ -101,6 +108,7 @@
         customerIdSelect.innerHTML = `
           <option value="">Select Customer ID</option>
           ${customers
+            .filter(c => c && c.id && c.name && c.id.trim() !== "" && c.name.trim() !== "")
             .map(
               customer => `<option value="${escapeHtml(customer.id)}">${escapeHtml(customer.id)}</option>`
             )
@@ -110,6 +118,8 @@
         customerNameSelect.innerHTML = `
           <option value="">Select Customer Name</option>
           ${customers
+            .filter(c => c && c.id && c.name && c.id.trim() !== "" && c.name.trim() !== "")
+            .sort((a, b) => a.name.localeCompare(b.name))
             .map(
               customer => `
                 <option value="${escapeHtml(customer.id)}" data-name="${escapeHtml(customer.name)}">
@@ -347,6 +357,7 @@
       document.body.innerHTML = content;
       window.print();
       document.body.innerHTML = original;
+      location.reload();
     }
   </script>
 

@@ -263,7 +263,7 @@
     function renderBill(data) {
       form.style.display = "none";
       statusEl.innerHTML = `
-        <div id="billArea">
+        <div id="billAreaMain">
           <br>
          <div id="billArea"
      style="width:650px;margin:auto;
@@ -275,7 +275,7 @@
   <div style="text-align:center;">
     <h2 style="margin:0;">ABCD COMPANY</h2>
     <p style="margin:4px 0;">
-      Brahmanakraka, Nellore District, Andhra Pradesh
+      Brahmanakraka, Nellore District, A.P - 524223
     </p>
     <p style="font-size:12px;margin:4px 0;">
       Phone: +91 8428820714
@@ -344,21 +344,48 @@
 
           <br>
           <button onclick="printBill()"> Print</button>
-          <button onclick="location.reload();"> Close</button>
+          <button onclick="closeBill()">Close</button>
         </div>
       `;
     }
-
+    
+    function closeBill() {
+     statusEl.innerHTML = '';
+     form.style.display = 'inline-block';
+     dataForm.reset();
+    } 
+    
     /* ✅ PRINT LOGIC */
     function printBill() {
-      const content = document.getElementById("billArea").innerHTML;
-      const original = document.body.innerHTML;
+  const content = document.getElementById("billArea").innerHTML;
 
-      document.body.innerHTML = content;
-      window.print();
-      document.body.innerHTML = original;
-      location.reload();
-    }
+  const win = window.open("", "", "width=800,height=600");
+
+  win.document.write(`
+    <html>
+    <head>
+      <title>Print</title>
+      <style>
+        body { font-family: Arial; }
+        table { width:100%; border-collapse:collapse; }
+        th, td { border:1px solid #000; padding:8px; }
+      </style>
+    </head>
+    <body>${content}</body>
+    </html>
+  `);
+
+  win.document.close();
+
+  // ✅ Wait for print to finish, then close
+  win.onafterprint = function() {
+    win.close();
+  };
+
+  win.focus();
+  win.print();
+  closeBill();
+}
   </script>
 
 </body>

@@ -297,7 +297,7 @@ function closeBill() {
   month.selectedIndex = new Date().getMonth()+1;
 }
 
-function printBill() {
+async function printBill() {
   const content = document.getElementById("billArea").innerHTML;
 
   const win = window.open("Bill", "Bill", "width=800,height=600");

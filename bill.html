@@ -318,8 +318,9 @@ function printBill() {
 
   win.document.close();
   win.print();
-  win.close();
-  closeBill();
+  setInterval(() => {
+    if (win.closed) closeBill();
+  }, 300);
 }
 </script>
 

@@ -76,7 +76,7 @@
 
   <script>
     const scriptURL = `https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec`;
-
+	
     const form = document.getElementById("dataForm");
     const statusEl = document.getElementById("status");
     const loadingEl = document.getElementById("loading");
@@ -86,6 +86,7 @@
     const monthSelect = document.getElementById("month");
     const submitBtn = form.querySelector("button");
 
+    monthSelect.selectedIndex=new Date().getMonth()+1;
     form.addEventListener("submit", submitData);
     customerIdSelect.addEventListener("change", () => syncCustomerSelects("id"));
     customerNameSelect.addEventListener("change", () => syncCustomerSelects("name"));

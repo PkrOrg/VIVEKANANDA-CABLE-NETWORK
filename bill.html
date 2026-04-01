@@ -30,7 +30,6 @@
     }
 
     input, select, button {
-      width: 100%;
       padding: 12px;
       margin: 8px 0;
       font-size: 16px;
@@ -38,11 +37,12 @@
     }
 
     input, select {
+      width: 100%;
       border: 1px solid #ccc;
-      
     }
 
     button {
+      width: 20%;
       background: #0078d7;
       color: white;
       border: none;
@@ -96,7 +96,7 @@
 
 <body>
 
-<button class="back-btn" onclick="window.location.href='index.html'" style="width: 20%;">⬅ Back to Main Page</button>
+<button class="back-btn" onclick="window.location.href='index.html'" >⬅ Back to Main Page</button>
 
 <h2>ABCD Bill Entry Sheet</h2>
 
@@ -122,7 +122,7 @@
     <option>October</option><option>November</option><option>December</option>
   </select>
 
-  <button type="submit">Submit</button>
+  <button type="submit" style="width:100%;">Submit</button>
 </form>
 
 <script>
@@ -152,7 +152,7 @@ async function loadCustomers() {
     let optionsId = '<option value="">Select ID</option>';
     let optionsName = '<option value="">Select Name</option>';
 
-    const valid = data.filter(r => r && r[0] && r[1] && r[0] !== "" && r[1] !== "");
+    const valid = data.slice(1).filter(r => r && r[0] && r[1] && r[0] !== "" && r[1] !== "");
 
 	// ID sorted
     valid.slice()
@@ -283,7 +283,7 @@ function renderBill(data) {
 </div>
 
           <br>
-          <button onclick="printBill()"> Print</button>
+          <button onclick="printBill()">Print</button>
           <button onclick="closeBill()">Close</button>
         </div>
      
@@ -294,12 +294,13 @@ function closeBill() {
   statusEl.innerHTML = "";
   form.style.display = "block";
   form.reset();
+  month.selectedIndex = new Date().getMonth()+1;
 }
 
 function printBill() {
   const content = document.getElementById("billArea").innerHTML;
 
-  const win = window.open("", "", "width=800,height=600");
+  const win = window.open("Bill", "Bill", "width=800,height=600");
 
   win.document.write(`
     <html>
@@ -317,6 +318,8 @@ function printBill() {
 
   win.document.close();
   win.print();
+  win.close();
+  closeBill();
 }
 </script>
 

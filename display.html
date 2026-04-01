@@ -215,8 +215,8 @@
       const monthValue = document.getElementById("monthFilter").value;
 
       const filteredRows = allData.filter(row => {
-        const nameMatch = !nameValue || (row[2] && String(row[2]).toLowerCase() === nameValue);
-        const monthMatch = !monthValue || (row[3] && row[3].toLowerCase() === monthValue);
+        const nameMatch = !nameValue || (row[2] && String(row[2]).toLowerCase() === nameValue.toLowerCase());
+        const monthMatch = !monthValue || (row[3] && row[3].toLowerCase() === monthValue.toLowerCase());
         return nameMatch && monthMatch;
       });
 

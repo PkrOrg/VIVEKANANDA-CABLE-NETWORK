@@ -446,12 +446,13 @@
               <div class="form-group">
                   <label for="fName">Full Name <span class="required">*</span></label>
                   <input id="fName" type="text" placeholder="Customer full name" required />
-              </div>
+              </div> <br>
               <div class="form-group">
               <label for="fPhone">Phone Number <span class="required">*</span></label>
               <input id="fPhone" type="tel" placeholder="+91 934 567 8900"  required/>
             </div>
           </div>
+<br>
           <div class="form-group">
             <label for="fAddress">Address <span class="required">*</span></label>
             <textarea id="fAddress" rows="2" placeholder="Street, City, State"  required></textarea>
@@ -794,7 +795,7 @@
 	closeModal();
         setStatus(`✅ Customer "${name}" added. Refreshing…`, 'info');
         await loadData();
-        $('fetchBtn').textContent = '🔄 Refresh';   // keep button label consistent
+        $('fetchBtn').textContent = '🔄 Reload';   // keep button label consistent
     }
 
     /* ─── Fetch button ─── */
@@ -806,9 +807,10 @@
         await loadData();
       } finally {
         btn.disabled    = false;
-        btn.textContent = '🔄 Refresh';
+        btn.textContent = '🔄 Reload';
       }
     }
+    handleFetch();
 
     /* ─── Boot ─── */
     // Show idle state — don't fetch until the user clicks Fetch Records

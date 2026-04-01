@@ -78,9 +78,13 @@
       <option value="">All</option>
     </select> 
     <strong>Months</strong>
-    <select id="monthFilter" >
+     <select id="monthFilter" required>
       <option value="">All</option>
-    </select>
+      <option>January</option><option>February</option><option>March</option>
+      <option>April</option><option>May</option><option>June</option>
+      <option>July</option><option>August</option><option>September</option>
+      <option>October</option><option>November</option><option>December</option>
+    </select> 
     <button onclick="applyFilters()">Apply Filters</button>
     <button onclick="resetFilters()">Reset</button>
   </div>
@@ -176,19 +180,13 @@
       });
 
       const nameFilter = document.getElementById("nameFilter");
-      nameSet.forEach(name => {
+      [...nameSet]
+      .sort((a, b) => String(a).toLowerCase().localeCompare(String(b).toLowerCase()))
+      .forEach(name => {
         const option = document.createElement("option");
         option.value = String(name).toLowerCase();
         option.textContent = name;
         nameFilter.appendChild(option);
-      });
-
-      const monthFilter = document.getElementById("monthFilter");
-      monthSet.forEach(month => {
-        const option = document.createElement("option");
-        option.value = month.toLowerCase();
-        option.textContent = month;
-        monthFilter.appendChild(option);
       });
     }
 

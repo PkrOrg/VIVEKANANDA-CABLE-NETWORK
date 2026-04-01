@@ -318,7 +318,8 @@ function printBill() {
 
   win.document.close();
   win.print();
-  // win.close();
+  await sleep(2000);
+	win.close();
  closeBill();
 }
 </script>

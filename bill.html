@@ -1,363 +1,230 @@
 <!DOCTYPE html>
 <html>
-<button onclick="window.location.href = 'index.html'" style="
-  position: fixed;
-  right: 2px;
-  top: 5%;
-  cursor: pointer;
-"> Back to Main Page
-</button>
 <head>
   <title>ABCD Bill Entry Sheet</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
+    * { box-sizing: border-box; }
+
     body {
       font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 15px;
       text-align: center;
-      margin-top: 50px;
+      background: #f4f6f8;
     }
+
+    h2 {
+      margin-top: 40px;
+    }
+
     form {
-      display: inline-block;
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background: #f9f9f9;
+      width: 100%;
+      max-width: 400px;
+      margin: auto;
+      padding: 15px;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
+
     input, select, button {
-      margin: 10px;
-      padding: 8px;
-      width: 200px;
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      font-size: 16px;
+      border-radius: 6px;
     }
+
+    input, select {
+      border: 1px solid #ccc;
+    }
+
     button {
-      cursor: pointer;
       background: #0078d7;
       color: white;
       border: none;
-      border-radius: 4px;
     }
+
     button:hover {
       background: #005fa3;
     }
+
     #loading {
       display: none;
       font-weight: bold;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      padding: 8px 12px;
+      font-size: 14px;
+      z-index: 1000;
+    }
+
+    #billArea {
+      width: 100%;
+      max-width: 500px;
+      margin: auto;
+      padding: 15px;
+      border: 1px solid #000;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #000;
+      padding: 6px;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    @media (max-width: 480px) {
+      h2 { font-size: 20px; }
+      th, td { font-size: 13px; }
     }
   </style>
 </head>
 
 <body>
 
-  <h2>ABCD Bill Entry Sheet</h2>
+<button class="back-btn" onclick="window.location.href='index.html'">⬅ Back</button>
 
-  <div id="loading"> Loading...</div>
-  <p id="status"></p>
+<h2>ABCD Bill Entry Sheet</h2>
 
-  <form id="dataForm">
-    <select id="customerIdSelect" required disabled>
-      <option value="">Loading customer IDs...</option>
-    </select><br>
+<div id="loading">Loading...</div>
+<p id="status"></p>
 
-    <select id="customerNameSelect" required disabled>
-      <option value="">Loading customer names...</option>
-    </select><br>
+<form id="dataForm">
+  <select id="customerIdSelect" required disabled>
+    <option>Loading IDs...</option>
+  </select>
 
-    <input type="number" id="amount" placeholder="Enter Amount" required /><br>
+  <select id="customerNameSelect" required disabled>
+    <option>Loading Names...</option>
+  </select>
 
-    <select id="month" required>
-      <option value="">Select Month</option>
-      <option>January</option><option>February</option><option>March</option>
-      <option>April</option><option>May</option><option>June</option>
-      <option>July</option><option>August</option><option>September</option>
-      <option>October</option><option>November</option><option>December</option>
-    </select><br>
+  <input type="number" id="amount" placeholder="Enter Amount" required />
 
-    <button type="submit">Submit</button>
-  </form>
+  <select id="month" required>
+    <option value="">Select Month</option>
+    <option>January</option><option>February</option><option>March</option>
+    <option>April</option><option>May</option><option>June</option>
+    <option>July</option><option>August</option><option>September</option>
+    <option>October</option><option>November</option><option>December</option>
+  </select>
 
-  <script>
-    const scriptURL = `https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec`;
-	
-    const form = document.getElementById("dataForm");
-    const statusEl = document.getElementById("status");
-    const loadingEl = document.getElementById("loading");
-    const customerIdSelect = document.getElementById("customerIdSelect");
-    const customerNameSelect = document.getElementById("customerNameSelect");
-    const amountInput = document.getElementById("amount");
-    const monthSelect = document.getElementById("month");
-    const submitBtn = form.querySelector("button");
+  <button type="submit">Submit</button>
+</form>
 
-    monthSelect.selectedIndex=new Date().getMonth()+1;
-    form.addEventListener("submit", submitData);
-    customerIdSelect.addEventListener("change", () => syncCustomerSelects("id"));
-    customerNameSelect.addEventListener("change", () => syncCustomerSelects("name"));
-    loadCustomers();
+<script>
+const scriptURL = "https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec";
 
-    async function loadCustomers() {
-      customerIdSelect.disabled = true;
-      customerNameSelect.disabled = true;
-      submitBtn.disabled = true;
+const form = document.getElementById("dataForm");
+const statusEl = document.getElementById("status");
+const loadingEl = document.getElementById("loading");
+const idSel = document.getElementById("customerIdSelect");
+const nameSel = document.getElementById("customerNameSelect");
+const amount = document.getElementById("amount");
+const month = document.getElementById("month");
 
-      try {
-        const response = await fetch(scriptURL+"?sheet=Sheet2");
-        const text = await response.text();
-        const customers = normalizeCustomers(text);
+month.selectedIndex = new Date().getMonth()+1;
 
-        if (!customers.length) {
-          throw new Error("No customer records found.");
-        }
+form.addEventListener("submit", submitData);
+idSel.addEventListener("change", () => nameSel.value = idSel.value);
+nameSel.addEventListener("change", () => idSel.value = nameSel.value);
 
-        customerIdSelect.innerHTML = `
-          <option value="">Select Customer ID</option>
-          ${customers
-            .filter(c => c && c.id && c.name && c.id.trim() !== "" && c.name.trim() !== "")
-            .map(
-              customer => `<option value="${escapeHtml(customer.id)}">${escapeHtml(customer.id)}</option>`
-            )
-            .join("")}
-        `;
+loadCustomers();
 
-        customerNameSelect.innerHTML = `
-          <option value="">Select Customer Name</option>
-          ${customers
-            .filter(c => c && c.id && c.name && c.id.trim() !== "" && c.name.trim() !== "")
-            .sort((a, b) => a.name.localeCompare(b.name))
-            .map(
-              customer => `
-                <option value="${escapeHtml(customer.id)}" data-name="${escapeHtml(customer.name)}">
-                  ${escapeHtml(customer.name)}
-                </option>`
-            )
-            .join("")}
-        `;
+async function loadCustomers() {
+  try {
+    const res = await fetch(scriptURL + "?sheet=Sheet2");
+    const data = await res.json();
 
-        customerIdSelect.disabled = false;
-        customerNameSelect.disabled = false;
-        submitBtn.disabled = false;
-      } catch (err) {
-        console.error(err);
-        customerIdSelect.innerHTML = '<option value="">Unable to load customer IDs</option>';
-        customerNameSelect.innerHTML = '<option value="">Unable to load customer names</option>';
-        statusEl.textContent = "Unable to load customer list. Check the customer data URL.";
-      }
-    }
+    let optionsId = '<option value="">Select ID</option>';
+    let optionsName = '<option value="">Select Name</option>';
 
-    function syncCustomerSelects(source) {
-      if (source === "id") {
-        customerNameSelect.value = customerIdSelect.value;
-      } else {
-        customerIdSelect.value = customerNameSelect.value;
-      }
-    }
+    data.forEach(r => {
+      optionsId += `<option value="${r[0]}">${r[0]}</option>`;
+      optionsName += `<option value="${r[0]}" data-name="${r[1]}">${r[1]}</option>`;
+    });
 
-    function normalizeCustomers(rawText) {
-      const parsed = JSON.parse(rawText);
-      const rows = Array.isArray(parsed)
-        ? parsed
-        : Array.isArray(parsed.data)
-          ? parsed.data
-          : Array.isArray(parsed.customers)
-            ? parsed.customers
-            : Array.isArray(parsed.records)
-              ? parsed.records
-              : [];
+    idSel.innerHTML = optionsId;
+    nameSel.innerHTML = optionsName;
 
-      return rows
-        .map(row => {
-          if (Array.isArray(row)) {
-            const [customerId, customerName] = row;
+    idSel.disabled = false;
+    nameSel.disabled = false;
+  } catch {
+    statusEl.textContent = "Error loading customers";
+  }
+}
 
-            if (isHeaderRow(customerId, customerName) || customerId == null || customerName == null) {
-              return null;
-            }
+function submitData(e) {
+  e.preventDefault();
 
-            return {
-              id: String(customerId).trim(),
-              name: String(customerName).trim()
-            };
-          }
+  const selected = nameSel.options[nameSel.selectedIndex];
 
-          if (row && typeof row === "object") {
-            const customerId = row.id ?? row.customerId ?? row.customerID ?? row.ID;
-            const customerName = row.name ?? row.customerName ?? row.customer ?? row.cname;
+  const payload = new URLSearchParams({
+    sheet: "Sheet1",
+    id: idSel.value,
+    name: selected.dataset.name,
+    amount: amount.value,
+    month: month.value,
+    issuedby: "PKR"
+  });
 
-            if (isHeaderRow(customerId, customerName) || customerId == null || customerName == null) {
-              return null;
-            }
+  loadingEl.style.display = "block";
 
-            return {
-              id: String(customerId).trim(),
-              name: String(customerName).trim()
-            };
-          }
+  fetch(scriptURL, { method: "POST", body: payload })
+    .then(r => r.json())
+    .then(renderBill)
+    .catch(() => statusEl.textContent = "Error submitting")
+    .finally(() => loadingEl.style.display = "none");
+}
 
-          return null;
-        })
-        .filter(Boolean);
-    }
+function renderBill(res) {
+  form.style.display = "none";
 
-    function isHeaderRow(customerId, customerName) {
-      const idText = String(customerId ?? "").trim().toLowerCase();
-      const nameText = String(customerName ?? "").trim().toLowerCase();
+  const d = res.data;
 
-      return ["id", "customer id", "customerid"].includes(idText)
-        && ["name", "customer name", "customername", "cname"].includes(nameText);
-    }
+  statusEl.innerHTML = `
+    <div id="billArea">
+      <h3 style="text-align:center;">ABCD COMPANY</h3>
+      <p style="text-align:center;font-size:12px;">Nellore, A.P</p>
+      <hr>
+      <h4 style="text-align:center;">BILL / INVOICE</h4>
 
-    function escapeHtml(value) {
-      return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
+      <table>
+        <tr><th>Bill ID</th><td>${d[0]}</td></tr>
+        <tr><th>Customer ID</th><td>${d[1]}</td></tr>
+        <tr><th>Name</th><td>${d[2]}</td></tr>
+        <tr><th>Month</th><td>${d[3]}</td></tr>
+        <tr><th>Date</th><td>${d[5]}</td></tr>
+        <tr><th>Issued By</th><td>${d[6]}</td></tr>
+        <tr><th>Amount</th><td><b>Rs. ${d[4]}</b></td></tr>
+      </table>
 
-    function submitData(e) {
-      e.preventDefault();
+      <br>
+      <button onclick="printBill()">Print</button>
+      <button onclick="closeBill()">Close</button>
+    </div>
+  `;
+}
 
-      const selectedId = customerIdSelect.value;
-      const selectedNameOption = customerNameSelect.options[customerNameSelect.selectedIndex];
+function closeBill() {
+  statusEl.innerHTML = "";
+  form.style.display = "block";
+  form.reset();
+}
 
-      if (!selectedId || !selectedNameOption || !selectedNameOption.dataset.name) {
-        statusEl.textContent = "Please select customer ID and customer name.";
-        return;
-      }
-
-      if (customerNameSelect.value !== selectedId) {
-        statusEl.textContent = "Customer ID and name do not match.";
-        return;
-      }
-
-      toggleLoading(true);
-      statusEl.textContent = "";
-
-      const payload = new URLSearchParams({
-        sheet: "Sheet1",
-        id: selectedId,
-        name: selectedNameOption.dataset.name,
-        amount: amountInput.value,
-        month: monthSelect.value,
-        issuedby: "PKR"
-      });
-
-      fetch(scriptURL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: payload
-      })
-      .then(res => res.text())
-      .then(text => renderBill(JSON.parse(text)))
-      .catch(err => {
-        console.error(err);
-        statusEl.textContent = "Error inserting data.";
-      })
-      .finally(() => toggleLoading(false));
-    }
-
-    function toggleLoading(state) {
-      loadingEl.style.display = state ? "block" : "none";
-      customerIdSelect.disabled = state;
-      customerNameSelect.disabled = state;
-      submitBtn.disabled = state;
-    }
-
-    function renderBill(data) {
-      form.style.display = "none";
-      statusEl.innerHTML = `
-        <div id="billAreaMain">
-          <br>
-         <div id="billArea"
-     style="width:650px;margin:auto;
-            font-family:Arial, sans-serif;
-            border:1px solid #000;
-            padding:20px;">
-
-  <!-- Company Header -->
-  <div style="text-align:center;">
-    <h2 style="margin:0;">ABCD COMPANY</h2>
-    <p style="margin:4px 0;">
-      Brahmanakraka, Nellore District, A.P - 524223
-    </p>
-    <p style="font-size:12px;margin:4px 0;">
-      Phone: +91 8428820714
-    </p>
-    <hr>
-  </div>
-
-  <!-- Bill Title -->
-  <h3 style="text-align:center;margin:10px 0;">
-    BILL / INVOICE
-  </h3>
-
-  <!-- Bill Details -->
-  <table width="100%" cellpadding="8" cellspacing="0"
-         style="border-collapse:collapse;border:1px solid #000;">
-    
-    <tr align="left">
-      <th style="border:1px solid #000;">Bill ID</th>
-      <td style="border:1px solid #000;">${data.data[0]}</td>
-    </tr>
-
-    <tr align="left">
-      <th  style="border:1px solid #000;">Customer ID</th>
-      <td style="border:1px solid #000;">${data.data[1]}</td>
-    </tr>
-
-    <tr align="left">
-      <th style="border:1px solid #000;">Customer Name</th>
-      <td style="border:1px solid #000;">${data.data[2]}</td>
-    </tr>
-
-    <tr align="left">
-      <th style="border:1px solid #000;">Billing Month</th>
-      <td style="border:1px solid #000;">${data.data[3]}</td>
-    </tr>
-
-    <tr align="left">
-      <th style="border:1px solid #000;">Issued Date</th>
-      <td style="border:1px solid #000;">${data.data[5]}</td>
-    </tr>
-
-    <tr align="left">
-      <th style="border:1px solid #000;">Issued By</th>
-      <td style="border:1px solid #000;">${data.data[6]}</td>
-    </tr>
-
-    <tr align="left">
-      <th style="border:1px solid #000;">Total Amount</th>
-      <td style="border:1px solid #000;font-weight:bold;">
-        Rs. ${data.data[4]}
-      </td>
-    </tr>
-  </table>
-
-  <br>
-
-  <!-- Footer Note -->
-  <p style="text-align:center;font-size:12px;">
-    *This bill is auto-generated by the system and does not require a signature.*
-  </p>
-
-  <p style="text-align:center;font-size:12px;">
-    Thank you for choosing ABCD Company.
-  </p>
-</div>
-
-          <br>
-          <button onclick="printBill()"> Print</button>
-          <button onclick="closeBill()">Close</button>
-        </div>
-      `;
-    }
-    
-    function closeBill() {
-     statusEl.innerHTML = '';
-     form.style.display = 'inline-block';
-     dataForm.reset();
-    } 
-    
-    /* ✅ PRINT LOGIC */
-    function printBill() {
+function printBill() {
   const content = document.getElementById("billArea").innerHTML;
 
   const win = window.open("", "", "width=800,height=600");
@@ -365,11 +232,11 @@
   win.document.write(`
     <html>
     <head>
-      <title>Print</title>
+      <meta name="viewport" content="width=device-width">
       <style>
-        body { font-family: Arial; }
+        body { font-family: Arial; padding:10px; }
         table { width:100%; border-collapse:collapse; }
-        th, td { border:1px solid #000; padding:8px; }
+        th, td { border:1px solid #000; padding:6px; }
       </style>
     </head>
     <body>${content}</body>
@@ -377,17 +244,10 @@
   `);
 
   win.document.close();
-
-  // ✅ Wait for print to finish, then close
-  win.onafterprint = function() {
-    win.close();
-  };
-
-  win.focus();
   win.print();
-  closeBill();
 }
-  </script>
+</script>
 
 </body>
 </html>
+

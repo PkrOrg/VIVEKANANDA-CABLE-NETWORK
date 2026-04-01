@@ -316,7 +316,7 @@ async function printBill() {
     </html>
   `);
 
-  win.document.close();
+
   win.print();
   await new Promise(resolve => setTimeout(resolve, 2000)); // delay
 	win.close();

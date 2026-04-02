@@ -318,10 +318,12 @@ function printBill() {
 
   win.document.close();
   win.print();
-  setInterval(() => {
-    if (win.closed) closeBill();
-  }, 300);
-}
+  const intervalId = setInterval(() => {
+  	if (win.closed) {
+    	closeBill();
+  		clearInterval(intervalId); // stops the interval
+  	}
+   }, 300);
 </script>
 
 </body>

@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html>
 <head>
   <title>Prasanna Billing App</title>
@@ -70,6 +70,16 @@
       color: red;
       font-size: 13px;
     }
+     .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #777;
+     }
+    #loading {
+  margin-top: 10px;
+  font-size: 24px;
+  color: #007bff;
+}
   </style>
 </head>
 
@@ -77,12 +87,13 @@
 
   <!-- 🔐 LOGIN -->
   <div id="loginBox" class="box">
+	<div id="loading" class="hidden"><img src="https://i.gifer.com/ZKZg.gif" width="24" height="24" alt="⏳"> Logging in...</div>
     <h2>🔐 Login</h2>
 
     <input type="text" id="username" placeholder="Username" value="admin">
     <input type="password" id="password" placeholder="Password" value="myBill@1">
 
-    <button onclick="login()">Login</button>
+    <button onclick="handleLogin(event)">Login</button>
     <div id="error" class="error"></div>
   </div>
 
@@ -93,8 +104,11 @@
     <a href="customers.html" class="btn btn-customer">👤 Customer Page</a>
     <a href="bill.html" class="btn btn-bill">🧾 Billing Page</a>
     <a href="display.html" class="btn btn-display">📄 View All Bills</a>
-
     <button onclick="logout()">Logout</button>
+
+    <div class="footer">
+      © Prasanna App
+    </div>
   </div>
 
   <script>
@@ -114,34 +128,47 @@
       document.getElementById("loginBox").classList.remove("hidden");
       document.getElementById("dashboard").classList.add("hidden");
     }
+function handleLogin(event) {
+  event.preventDefault();
 
-    async function login() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
+  document.getElementById("loading").classList.remove("hidden"); // show loader
+  document.getElementById("error").innerText = ""; // clear error
+  document.querySelector("button").disabled = true;
+  login();
+}
+   async function login() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
 
-      const scriptURL = "https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec";
+  const scriptURL = "https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec";
 
-	const payload = new URLSearchParams({
-    		username: "admin",
-		password: "myBill@1"
-  	});
+  const payload = new URLSearchParams({
+    username: username,
+    password: password
+  });
 
-	fetch(scriptURL, { method: "POST", body: payload })
-    	.then(r => r.json())
-    	.then(data => {
-			if (data.success) {
-        		   localStorage.setItem("loggedIn", "true");
-                           showDashboard();
-                        } else {
-                            document.getElementById("error").innerText = "Invalid login!";
-                        }
-      })
-   	.catch(() => document.getElementById("error").innerText = "Invalid login!")
-    	//.finally(() => loadingEl.style.display = "none");      
-    }
+  fetch(scriptURL, { method: "POST", body: payload })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById("loading").classList.add("hidden"); // hide loader
 
+      if (data.success) {
+        localStorage.setItem("loggedIn", "true");
+        localStorage.setItem("token", data.token);
+        showDashboard();
+      } else {
+        document.getElementById("error").innerText = "Invalid login!";
+      }
+    })
+    .catch(() => {
+      document.getElementById("loading").classList.add("hidden");
+      document.getElementById("error").innerText = "Invalid login!";
+    })
+    .finally(() => document.querySelector("button").disabled = false);
+}
     function logout() {
       localStorage.removeItem("loggedIn");
+      localStorage.removeItem("token");
       showLogin();
     }
   </script>

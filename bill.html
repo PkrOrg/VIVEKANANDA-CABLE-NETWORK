@@ -188,7 +188,8 @@ function submitData(e) {
     name: selected.dataset.name,
     amount: amount.value,
     month: month.value,
-    issuedby: "PKR"
+    issuedby: "PKR",
+    token: localStorage.getItem("token")
   });
 
   loadingEl.style.display = "block";
@@ -319,11 +320,11 @@ function printBill() {
   win.document.close();
   win.print();
   const intervalId = setInterval(() => {
-  	if (win.closed) {
-    	closeBill();
-  		clearInterval(intervalId); // stops the interval
-  	}
-   }, 300);
+    if (win.closed) {
+       closeBill();
+       clearInterval(intervalId); // stops the interval
+    }
+  }, 300);
 }
 </script>
 

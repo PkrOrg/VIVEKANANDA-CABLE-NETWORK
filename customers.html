@@ -761,7 +761,8 @@
           name:     name,
           address:  $('fAddress').value.trim(),
           phone:    $('fPhone').value.trim(),
-          issuedby: 'PKR'
+          issuedby: 'PKR',
+          token:    localStorage.getItem("token")
         };
         console.log('[CustomerLookup] inserting:', payload);
 

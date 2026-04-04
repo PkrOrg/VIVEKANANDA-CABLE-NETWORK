@@ -127,11 +127,15 @@
 
 <script>
 
+function verifyLogin() {
     const isLoggedIn = localStorage.getItem("loggedIn");
-
     if (isLoggedIn !== "true") {
         window.location.replace("index.html");
     }
+}
+verifyLogin();
+
+document.addEventListener("visibilitychange", function () { verifyLogin(); });
 
 const scriptURL = "https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec";
 
@@ -204,7 +208,7 @@ function submitData(e) {
   fetch(scriptURL, { method: "POST", body: payload })
     .then(r => r.json())
     .then(renderBill)
-    .catch(() => statusEl.textContent = "Error submitting")
+    .catch(ex => statusEl.textContent = ex)
     .finally(() => loadingEl.style.display = "none");
 }
 

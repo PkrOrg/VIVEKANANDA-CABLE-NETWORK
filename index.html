@@ -112,12 +112,16 @@
   </div>
 
   <script>
+    function verifyLogin() {
+       if (localStorage.getItem("loggedIn") !== "true") {
+          logout();
+       } else {
+          showDashboard();
+       }
+    }
+    document.addEventListener("visibilitychange", function () { verifyLogin(); });
     // Check login on load
-    window.onload = function () {
-      if (localStorage.getItem("loggedIn") === "true") {
-        showDashboard();
-      }
-    };
+    window.onload = function () { verifyLogin()};
 
     function showDashboard() {
       document.getElementById("loginBox").classList.add("hidden");

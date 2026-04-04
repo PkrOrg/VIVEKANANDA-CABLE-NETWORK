@@ -467,11 +467,15 @@
   </div>
 
   <script>
+  function verifyLogin() {
     const isLoggedIn = localStorage.getItem("loggedIn");
-
     if (isLoggedIn !== "true") {
         window.location.replace("index.html");
     }
+   }
+verifyLogin();
+
+document.addEventListener("visibilitychange", function () { verifyLogin(); });
 	/* ─── Config ─── */
     const CONFIG = {
       scriptUrl: `https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec?sheet=Sheet2`,

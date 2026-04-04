@@ -92,12 +92,16 @@
   <table id="dataTable"></table>
 
   <script>
-    const isLoggedIn = localStorage.getItem("loggedIn");
+   function verifyLogin() {
+      const isLoggedIn = localStorage.getItem("loggedIn");
+      if (isLoggedIn !== "true") {
+         window.location.replace("index.html");
+      }
+   }
+   verifyLogin();
 
-    if (isLoggedIn !== "true") {
-        window.location.replace("index.html");
-    }
-	const url = "https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec?sheet=Sheet1";
+   document.addEventListener("visibilitychange", function () { verifyLogin(); });
+    const url = "https://script.google.com/macros/s/AKfycbwhUHDUlohD-H7XBXEKbnrwW3Kc11hnMsRTU9umKtKwmQuFI2SGfO21lpjNlJb6IwYc/exec?sheet=Sheet1";
     let allData = [];
 
     // Show loader

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>ABCD Bill Entry Sheet</title>
+  <title>VIVEKANANDA CABLE NETWORK Billing Entry</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -55,6 +55,9 @@
     #loading {
       display: none;
       font-weight: bold;
+	margin-top: 10px;
+  	font-size: 24px;
+  	color: #007bff;
     }
 
     .back-btn {
@@ -97,10 +100,10 @@
 <body>
 
 <button class="back-btn" onclick="window.location.href='index.html'" >⬅ Back to Main Page</button>
+<h1 style="color:blue; align:'middle'" >VIVEKANANDA CABLE NETWORK</h1>
+<h2>Billing Entry Sheet</h2>
 
-<h2>ABCD Bill Entry Sheet</h2>
-
-<div id="loading">Loading...</div>
+<div id="loading" class="hidden"><img src="https://i.gifer.com/ZKZg.gif" width="24" height="24" alt="⏳"> Loading...</div>
 <p id="status"></p>
 
 <form id="dataForm">
@@ -225,13 +228,14 @@ function renderBill(data) {
 
   <!-- Company Header -->
   <div style="text-align:center;">
-    <h2 style="margin:0;">ABCD COMPANY</h2>
+        <h3>VIVEKANANDA CABLE NETWORK</h3>
     <p style="margin:4px 0;">
       Brahmanakraka, Nellore District, A.P - 524223
     </p>
-    <p style="font-size:12px;margin:4px 0;">
-      Phone: +91 8428820714
+    <p style="font-size:12px;margin:4px 0;">Phone: +91 8428820714 
     </p>
+    <p style="font-size:12px;margin:4px 0;">Email: saikrishnapeddireddy@gamil.com</p>
+    <p style="font-size:12px;margin:4px 0;">GST NO : 0 </p>
     <hr>
   </div>
 
@@ -275,7 +279,19 @@ function renderBill(data) {
     </tr>
 
     <tr align="left">
-      <th style="border:1px solid #000;">Total Amount</th>
+      <th style="border:1px solid #000;">Base Price</th>
+      <td style="border:1px solid #000;font-weight:bold;">
+        Rs. ${data.data[4]}
+      </td>
+    </tr>
+    <tr align="left">
+      <th style="border:1px solid #000;">Total GST (18%) </th>
+      <td style="border:1px solid #000;font-weight:bold;">
+        Rs. 0
+      </td>
+    </tr>
+    <tr align="left">
+      <th style="border:1px solid #000;">Paid Amount</th>
       <td style="border:1px solid #000;font-weight:bold;">
         Rs. ${data.data[4]}
       </td>
@@ -290,7 +306,7 @@ function renderBill(data) {
   </p>
 
   <p style="text-align:center;font-size:12px;">
-    Thank you for choosing ABCD Company.
+    Thank you for choosing VIVEKANANDA CABLE NETWORK.
   </p>
 </div>
 

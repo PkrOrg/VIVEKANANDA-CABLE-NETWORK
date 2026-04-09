@@ -125,7 +125,7 @@
     <option>October</option><option>November</option><option>December</option>
   </select>
 
-  <button type="submit" style="width:100%;">Submit</button>
+  <button type="submit" style="width:100%;;display:none">Submit</button>
 </form>
 
 <script>
@@ -186,6 +186,7 @@ async function loadCustomers() {
 
     idSel.disabled = false;
     nameSel.disabled = false;
+	form.querySelector("button").style.display = "block";
   } catch {
     statusEl.textContent = "Error loading customers";
   }

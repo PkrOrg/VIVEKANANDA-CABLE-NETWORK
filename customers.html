@@ -602,11 +602,7 @@ document.addEventListener("visibilitychange", function () { verifyLogin(); });
     }
 
     /* ─── Dropdown population ─── */
-
-    // Called once after data loads — builds the "filter by field" options
-    function populateFieldDropdown() {
-      const fieldSelect = $('filterField');
-      const FIELD_LABELS = [
+const FIELD_LABELS = [
         ['id',        'Customer ID'],
         ['name',      'Name'],
         ['address',   'Address'],
@@ -614,6 +610,10 @@ document.addEventListener("visibilitychange", function () { verifyLogin(); });
         ['issueBy',   'Issued By'],
         ['phone',     'Phone Number'],
       ];
+    // Called once after data loads — builds the "filter by field" options
+    function populateFieldDropdown() {
+      const fieldSelect = $('filterField');
+      
 
       fieldSelect.innerHTML =
         `<option value="">— Filter by Field —</option>` +
@@ -640,6 +640,7 @@ document.addEventListener("visibilitychange", function () { verifyLogin(); });
       const keys   = FIELD_KEYS[fieldKey];
       const unique = [...new Set(
         allData.map(row => val(row, keys)).filter(v => v !== '—')
+               .map(row => {if (filterField.value==='issueDate') return row.split(",")[0]; else return row;})
       )].sort((a, b) => String(a).localeCompare(String(b), undefined, { numeric: true }));
 
       if (unique.length === 0) return;
@@ -663,8 +664,10 @@ document.addEventListener("visibilitychange", function () { verifyLogin(); });
 
       const keys     = FIELD_KEYS[fieldKey];
       const filtered = allData.filter(row =>
-        String(val(row, keys)) === selectedValue
-      );
+        { var x = String(val(row, keys));
+          if (filterField.value==='issueDate') x = x.split(",")[0]; 
+         return x === selectedValue;
+        });
 
       summaryEl.style.display = 'block';
       summaryEl.textContent   = `Found ${filtered.length} result(s)`;
@@ -685,7 +688,7 @@ document.addEventListener("visibilitychange", function () { verifyLogin(); });
       const id   = val(row, FIELD_KEYS.id);
       const fields = [
         ['📍', 'Address',      val(row, FIELD_KEYS.address)],
-        ['📅', 'Issue Date',   val(row, FIELD_KEYS.issueDate)],
+        ['📅', 'Issue Date,  \ Time',   val(row, FIELD_KEYS.issueDate)],
         ['👤', 'Issued By',    val(row, FIELD_KEYS.issueBy)],
         ['📞', 'Phone Number', val(row, FIELD_KEYS.phone)],
       ];
@@ -773,7 +776,7 @@ document.addEventListener("visibilitychange", function () { verifyLogin(); });
           name:     name,
           address:  $('fAddress').value.trim(),
           phone:    $('fPhone').value.trim(),
-          issuedby: 'PKR',
+          issuedby: localStorage.getItem("username"),
           token:    localStorage.getItem("token")
         };
         console.log('[CustomerLookup] inserting:', payload);

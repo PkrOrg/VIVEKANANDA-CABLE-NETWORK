@@ -162,6 +162,7 @@ function handleLogin(event) {
       if (data.success) {
         localStorage.setItem("loggedIn", "true");
         localStorage.setItem("token", data.token);
+        localStorage.setItem("username", username);
         showDashboard();
       } else {
         document.getElementById("error").innerText = "Invalid login!";

@@ -203,7 +203,7 @@ function submitData(e) {
     name: selected.dataset.name,
     amount: amount.value,
     month: month.value,
-    issuedby: "PKR",
+    issuedby: localStorage.getItem("username"),
     token: localStorage.getItem("token")
   });
 

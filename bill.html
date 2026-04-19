@@ -94,6 +94,14 @@
       h2 { font-size: 20px; }
       th, td { font-size: 13px; }
     }
+
+.row {
+  display: flex;
+  gap: 10px;
+}
+.row select {
+  flex: 1;
+}
   </style>
 </head>
 
@@ -116,6 +124,10 @@
   </select>
 
   <input type="number" id="amount" placeholder="Enter Amount" required />
+	<div class="row">  
+  <select id="billYear" required>
+    <option>2025</option>
+  </select>
 
   <select id="month" required>
     <option value="">Select Month</option>
@@ -124,7 +136,7 @@
     <option>July</option><option>August</option><option>September</option>
     <option>October</option><option>November</option><option>December</option>
   </select>
-
+</div>  
   <button type="submit" style="width:100%;display:none">Submit</button>
 </form>
 
